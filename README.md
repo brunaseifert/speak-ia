@@ -2,6 +2,8 @@
 
 Um simples aplicativo web que converte texto em áudio usando a **API de Síntese de Fala (SpeechSynthesis)** nativa do navegador.
 
+![Interface do Speak.AI](./speak-ia.png)
+
 ## Sobre as funcionalidades
 
 - Converte texto digitado em voz automaticamente.
