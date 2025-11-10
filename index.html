@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Speak.AI - Texto para Voz</title>
+<style>
+    * {
+        box-sizing: border-box;
+        font-family: "georgia", serif;
+    }
+
+    body {
+        margin: 0;
+        background-color: #ffffff;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+    }
+
+    .container {
+        background-color: #e3e3e3;
+        width: 90%;
+        max-width: 960px;
+        padding: 40px;
+        border-radius: 10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.15);
+    }
+
+    .header {
+        text-align: center;
+        margin-bottom: 20px;
+    }
+
+    .header h1 {
+        margin: 0;
+        font-size: 1.8em;
+        color: #333;
+    }
+
+    .lang-switch {
+        display: flex;
+        justify-content: center;
+        margin-top: 10px;
+    }
+
+    .lang-switch button {
+        background-color: #ffffff;
+        border: 1px solid #ccc;
+        padding: 6px 14px;
+        margin: 0 3px;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+
+    .main-box {
+        display: flex;
+        background-color: white;
+        border-radius: 20px;
+        overflow: hidden;
+        margin-top: 30px;
+    }
+
+    .text-box {
+        width: 50%;
+        padding: 25px;
+        border-right: 1px solid #ddd;
+    }
+
+    textarea {
+        width: 100%;
+        height: 250px;
+        border: 1px solid #ccc;
+        border-radius: 10px;
+        padding: 10px;
+        font-size: 1em;
+        resize: none;
+    }
+
+    .upload-btn {
+        display: inline-block;
+        background-color: #e0e0ff;
+        color: #333;
+        border: none;
+        border-radius: 6px;
+        padding: 8px 16px;
+        margin-top: 10px;
+        cursor: pointer;
+    }
+
+    .clear-btn {
+        display: inline-block;
+        background-color: #e0e0ff;
+        color: #333;
+        border: none;
+        border-radius: 6px;
+        padding: 9px 16px;
+        margin-top: 50px;
+        margin-left: 7px;
+        cursor: pointer;
+    }
+
+    .clear-btn:hover {
+        background-color: #e0e0ff;
+    }
+
+    input[type="file"] {
+        display: none;
+    }
+
+    .voice-settings {
+        width: 50%;
+        padding: 25px;
+    }
+
+    .voice-settings h3 {
+        margin-top: 0;
+    }
+
+    select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 8px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+
+    /* Espaçamento entre "Voz" e "Velocidade" */
+    .voice-settings label[for="rateSelect"] {
+        display: block;
+        margin-top: 20px;
+    }
+
+    .generate-btn {
+        background-color: #dcdcdc;
+        border: none;
+        padding: 10px 10px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-top: 20px;
+        margin-left: 30px;
+        width: 85%;
+    }
+
+    .generate-btn:hover {
+        background-color: #cfcfcf;
+    }
+</style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header">
+        <div style="font-weight:bold;">Speak.IA</div>
+        <h1>IA Texto para Voz</h1>
+        <div class="lang-switch">
+            <button class="active" id="ptBtn">Português</button>
+            <button id="enBtn">Inglês</button>
+            <button id="esBtn">Espanhol</button>
+        </div>
+    </div>
+
+    <div class="main-box">
+        <div class="text-box">
+            <p>Entre com seu texto em português para ter o áudio:</p>
+            <textarea id="textInput" placeholder="Digite seu texto aqui..."></textarea>
+
+            <!-- Botões Upload e Limpar -->
+            <label class="upload-btn" for="fileUpload">Upload</label>
+            <input type="file" id="fileUpload" accept=".txt">
+
+            <button class="clear-btn" id="clearBtn"> Limpar texto</button>
+        </div>
+
+        <div class="voice-settings">
+            <h3>🔊 Customizar Voz</h3>
+            <label for="voiceSelect">Voz</label>
+            <select id="voiceSelect"></select>
+
+            <label for="rateSelect">Velocidade</label>
+            <select id="rateSelect">
+                <option value="0.75">0.75x</option>
+                <option value="1" selected>1x</option>
+                <option value="1.25">1.25x</option>
+                <option value="1.5">1.5x</option>
+            </select>
+
+            <button class="generate-btn" id="speakBtn">Gerar áudio</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const textInput = document.getElementById("textInput");
+    const voiceSelect = document.getElementById("voiceSelect");
+    const rateSelect = document.getElementById("rateSelect");
+    const speakBtn = document.getElementById("speakBtn");
+    const fileUpload = document.getElementById("fileUpload");
+    const clearBtn = document.getElementById("clearBtn");
+
+    let voices = [];
+
+    // Carregar vozes disponíveis
+    function loadVoices() {
+        voices = window.speechSynthesis.getVoices();
+        voiceSelect.innerHTML = '';
+        voices.forEach((voice, i) => {
+            const option = document.createElement("option");
+            option.value = i;
+            option.textContent = `${voice.name} (${voice.lang})`;
+            voiceSelect.appendChild(option);
+        });
+    }
+
+    window.speechSynthesis.onvoiceschanged = loadVoices;
+
+    // Botão gerar áudio
+    speakBtn.addEventListener("click", () => {
+        const text = textInput.value.trim();
+        if (!text) {
+            alert("Por favor, digite ou envie um texto para gerar o áudio.");
+            return;
+        }
+
+        const utter = new SpeechSynthesisUtterance(text);
+        const selectedVoice = voices[voiceSelect.value];
+        const rate = parseFloat(rateSelect.value);
+
+        if (selectedVoice) utter.voice = selectedVoice;
+        utter.rate = rate;
+
+        window.speechSynthesis.cancel(); // interrompe se já estiver falando
+        window.speechSynthesis.speak(utter);
+    });
+
+    // Botão limpar texto e parar voz
+    clearBtn.addEventListener("click", () => {
+        textInput.value = "";
+        window.speechSynthesis.cancel();
+    });
+
+    // Upload de arquivo .txt
+    fileUpload.addEventListener("change", () => {
+        const file = fileUpload.files[0];
+        if (!file) return;
+
+        if (file.type !== "text/plain") {
+            alert("Por favor, envie um arquivo .txt");
+            fileUpload.value = "";
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            textInput.value = e.target.result;
+        };
+        reader.readAsText(file);
+    });
+</script>
+
+</body>
+</html>
